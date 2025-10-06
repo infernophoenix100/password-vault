@@ -16,6 +16,8 @@ It lets you safely store, encrypt, and manage your credentials entirely ***offli
 
 ---
 
+![workflow](./workflow.png)
+
 ## Tech Stack
 
 - Python 3
