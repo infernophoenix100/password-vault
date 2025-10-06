@@ -1,0 +1,18 @@
+# Python cache
+__pycache__/
+*.pyc
+
+# SQLite database
+vault.db
+
+# Secret key file
+secret.key
+
+# Virtual environments
+venv/
+.env/
+.venv/
+
+# OS junk
+.DS_Store
+Thumbs.db
