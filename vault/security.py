@@ -68,3 +68,39 @@ def decrypt_password(encrypted: bytes, master_password: str) -> str:
     key = load_key(master_password)
     f = Fernet(key)
     return f.decrypt(encrypted).decode()
+
+def update_master_password(old_password: str, new_password: str):
+    """
+    Update master password by decrypting the old vault key with the old password,
+    then re-encrypting it with the new password.
+    """
+    if not (os.path.exists(KEY_FILE) and os.path.exists(SALT_FILE)):
+        raise FileNotFoundError("Missing key or salt file.")
+
+    with open(SALT_FILE, "rb") as sf:
+        old_salt = sf.read()
+
+    with open(KEY_FILE, "rb") as kf:
+        encrypted_vault_key = kf.read()
+
+    old_derived_key = derive_key(old_password, old_salt)
+    f_old = Fernet(old_derived_key)
+
+    try:
+        vault_key = f_old.decrypt(encrypted_vault_key)
+    except Exception:
+        raise ValueError("❌ Incorrect old master password — cannot update.")
+
+    new_salt = os.urandom(16)
+    with open(SALT_FILE, "wb") as sf:
+        sf.write(new_salt)
+
+    new_derived_key = derive_key(new_password, new_salt)
+    f_new = Fernet(new_derived_key)
+
+    new_encrypted_vault_key = f_new.encrypt(vault_key)
+
+    with open(KEY_FILE, "wb") as kf:
+        kf.write(new_encrypted_vault_key)
+
+    print("[✔] Master password updated successfully.")
