@@ -30,9 +30,10 @@ if __name__ == "__main__":
     choice = Prompt.ask("[green]Select an option[/green]", choices=["1", "2", "3"])
 
     if choice == "1":
-        if login_master():
+        master_password = login_master()
+        if master_password:
             console.print("[bold green]✅ Access granted. Opening vault...[/bold green]")
-            menu()
+            menu(master_password)  
         else:
             console.print("[bold red][!] Access denied.[/bold red]")
 

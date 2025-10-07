@@ -9,18 +9,22 @@ from vault.security import encrypt_password, decrypt_password
 console = Console()
 
 
-def add_entry(service, username, email, password):
+def add_entry(service, username, email, password, master_password):
+    """Add a new entry to the vault."""
     conn = sqlite3.connect("vault.db")
     c = conn.cursor()
-    encrypted = encrypt_password(password)
-    c.execute("INSERT INTO vault (service, username, email, password) VALUES (?, ?, ?, ?)",
-              (service, username, email, encrypted))
+    encrypted = encrypt_password(password, master_password)
+    c.execute(
+        "INSERT INTO vault (service, username, email, password) VALUES (?, ?, ?, ?)",
+        (service, username, email, encrypted),
+    )
     conn.commit()
     conn.close()
     console.print(f"[bold green]✅ Added credentials for {service}.[/bold green]")
 
 
 def list_services():
+    """List all stored services."""
     conn = sqlite3.connect("vault.db")
     c = conn.cursor()
     c.execute("SELECT id, service, username, email FROM vault")
@@ -44,7 +48,8 @@ def list_services():
     return rows
 
 
-def view_specific_entry():
+def view_specific_entry(master_password):
+    """View details of a specific vault entry."""
     rows = list_services()
     if not rows:
         return
@@ -56,7 +61,9 @@ def view_specific_entry():
 
     conn = sqlite3.connect("vault.db")
     c = conn.cursor()
-    c.execute("SELECT service, username, email, password FROM vault WHERE id = ?", (entry_id,))
+    c.execute(
+        "SELECT service, username, email, password FROM vault WHERE id = ?", (entry_id,)
+    )
     row = c.fetchone()
     conn.close()
 
@@ -65,7 +72,7 @@ def view_specific_entry():
         return
 
     service, username, email, encrypted = row
-    decrypted = decrypt_password(encrypted)
+    decrypted = decrypt_password(encrypted, master_password)
 
     panel_text = (
         f"[bold yellow]Service:[/bold yellow] {service}\n"
@@ -78,6 +85,7 @@ def view_specific_entry():
 
 
 def delete_entry():
+    """Delete a vault entry."""
     rows = list_services()
     if not rows:
         return
@@ -101,7 +109,8 @@ def delete_entry():
     console.print(f"[bold red]❌ Deleted entry {entry_id}.[/bold red]")
 
 
-def view_all_entries():
+def view_all_entries(master_password):
+    """View all entries with decrypted passwords."""
     conn = sqlite3.connect("vault.db")
     c = conn.cursor()
     c.execute("SELECT id, service, username, email, password FROM vault")
@@ -120,11 +129,14 @@ def view_all_entries():
     table.add_column("Password")
 
     for id, service, username, email, encrypted in rows:
-        decrypted = decrypt_password(encrypted)
+        decrypted = decrypt_password(encrypted, master_password)
         table.add_row(str(id), service, username, email, decrypted)
 
     console.print(table)
+
+
 def update_service():
+    """Update the service name for an existing entry."""
     rows = list_services()
     if not rows:
         return
@@ -145,6 +157,7 @@ def update_service():
 
 
 def update_email():
+    """Update the email address for an existing entry."""
     rows = list_services()
     if not rows:
         return
@@ -164,7 +177,8 @@ def update_email():
     console.print(f"[bold green]✅ Updated email for entry ID {entry_id}.[/bold green]")
 
 
-def update_password():
+def update_password(master_password):
+    """Update the stored password for an existing entry."""
     rows = list_services()
     if not rows:
         return
@@ -175,7 +189,7 @@ def update_password():
         return
 
     new_password = Prompt.ask("Enter new password", password=True)
-    encrypted = encrypt_password(new_password)
+    encrypted = encrypt_password(new_password, master_password)
 
     conn = sqlite3.connect("vault.db")
     c = conn.cursor()

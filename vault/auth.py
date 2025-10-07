@@ -1,9 +1,11 @@
-import sqlite3
 import hashlib
 import getpass
 from vault.db import get_connection
 from vault.security import generate_key, update_master_password
+from rich.console import Console
+from rich.panel import Panel
 
+console = Console()
 
 def hash_password(password: str) -> str:
     """Generate SHA-256 hash of the given password."""
@@ -38,14 +40,13 @@ def register_master():
         c.execute("INSERT INTO master (password_hash) VALUES (?)", (password_hash,))
         conn.commit()
         conn.close()
-
         generate_key(pw1)
         print("[+] Master password set successfully!")
         break
 
 
-def login_master() -> bool:
-    """Prompt for master password and verify it."""
+def login_master() -> str | None:
+    """Prompt for master password and verify it. Return password if valid."""
     print("=== Master Login ===")
     pw = getpass.getpass("Enter master password: ")
     password_hash = hash_password(pw)
@@ -58,15 +59,15 @@ def login_master() -> bool:
 
     if password_hash == stored_hash:
         print("[✓] Login successful!")
-        return True
+        return pw  
     else:
         print("[!] Incorrect password.")
-        return False
+        return None
 
 
 def change_master_password():
     """Update master password securely using old password verification."""
-    print("=== Update Master Password ===")
+    console.print(Panel("[bold cyan]🔑 Update Master Password[/bold cyan]", border_style="cyan"))
 
     old_pw = getpass.getpass("Enter current master password: ")
 
@@ -77,20 +78,20 @@ def change_master_password():
     conn.close()
 
     if hash_password(old_pw) != stored_hash:
-        print("[!] Incorrect current password. Cannot update.")
+        console.print("[bold red]❌ Incorrect current password. Cannot update.[/bold red]")
         return
 
     new_pw1 = getpass.getpass("Enter new master password: ")
     new_pw2 = getpass.getpass("Confirm new master password: ")
 
     if new_pw1 != new_pw2:
-        print("[!] Passwords do not match. Try again.")
+        console.print("[bold yellow]⚠️ Passwords do not match. Try again.[/bold yellow]")
         return
 
     try:
         update_master_password(old_pw, new_pw1)
     except ValueError as e:
-        print(f"[!] Error: {e}")
+        console.print(f"[bold red]❌ Error:[/bold red] {e}")
         return
 
     new_hash = hash_password(new_pw1)
@@ -100,4 +101,4 @@ def change_master_password():
     conn.commit()
     conn.close()
 
-    print("[✔] Master password updated successfully.")
+    console.print("[bold green]✔ Master password updated successfully![/bold green]")

@@ -1,17 +1,24 @@
-# vault/menu.py
 from rich.console import Console
-from rich.table import Table
 from rich.panel import Panel
 from rich.prompt import Prompt, Confirm
-from vault.vault_options import add_entry, view_specific_entry, delete_entry, view_all_entries,update_email,update_password,update_service
+from vault.vault_options import (
+    add_entry,
+    view_specific_entry,
+    delete_entry,
+    view_all_entries,
+    update_email,
+    update_password,
+    update_service,
+)
 
 console = Console()
 
 
-def menu():
+def menu(master_password: str):
+    """Main vault menu that reuses the provided master password."""
     while True:
         console.clear()
-        console.print(Panel("[bold cyan]PASSWORD VAULT[/bold cyan]"))
+        console.print(Panel("[bold cyan]PASSWORD VAULT MENU[/bold cyan]"))
 
         console.print("""
 [bold yellow]1.[/bold yellow] Add new entry  
@@ -31,16 +38,16 @@ def menu():
             username = Prompt.ask("Username")
             email = Prompt.ask("Email")
             password = Prompt.ask("Password", password=True)
-            add_entry(service, username, email, password)
+            add_entry(service, username, email, password, master_password)
 
         elif choice == "2":
-            view_specific_entry()
+            view_specific_entry(master_password)
 
         elif choice == "3":
             delete_entry()
 
         elif choice == "4":
-            view_all_entries()
+            view_all_entries(master_password)
 
         elif choice == "5":
             update_service()
@@ -49,7 +56,7 @@ def menu():
             update_email()
 
         elif choice == "7":
-            update_password()
+            update_password(master_password)
 
         elif choice == "8":
             console.print("[bold green]Goodbye![/bold green]")

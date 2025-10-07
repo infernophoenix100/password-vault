@@ -16,7 +16,7 @@ It lets you safely store, encrypt, and manage your credentials entirely ***offli
 
 ---
 
-![workflow](./assets/workflow.png)
+![Workflow](assets/workflow.png)
 
 ## Tech Stack
 

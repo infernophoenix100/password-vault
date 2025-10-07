@@ -103,4 +103,3 @@ def update_master_password(old_password: str, new_password: str):
     with open(KEY_FILE, "wb") as kf:
         kf.write(new_encrypted_vault_key)
 
-    print("[✔] Master password updated successfully.")
